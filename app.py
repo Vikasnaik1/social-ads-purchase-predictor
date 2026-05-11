@@ -1,6 +1,7 @@
 import streamlit as st
 import pickle
 import numpy as np
+import os
 
 st.set_page_config(
     page_title="Purchase Predictor",
@@ -458,7 +459,9 @@ html, body, [data-testid="stAppViewContainer"] {
 
 @st.cache_resource
 def load_model():
-    with open("model.pkl", "rb") as f:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(base_dir, "model.pkl")
+    with open(model_path, "rb") as f:
         return pickle.load(f)
 
 model = load_model()
