@@ -1,7 +1,6 @@
 import streamlit as st
-import pickle
+import joblib
 import numpy as np
-import pandas as pd
 import os
 
 st.set_page_config(
@@ -13,7 +12,7 @@ st.set_page_config(
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
-    
+
     html, body, [class*="css"] {
         font-family: 'Outfit', sans-serif;
         background-color: #050505;
@@ -27,12 +26,6 @@ st.markdown("""
     .header-container {
         padding: 4rem 0;
         text-align: center;
-        animation: fadeIn 1.2s ease-in;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .main-title {
@@ -62,8 +55,6 @@ st.markdown("""
         border-radius: 12px;
         font-weight: 700;
         font-size: 1.2rem;
-        letter-spacing: 1px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .stButton>button:hover {
@@ -77,68 +68,126 @@ st.markdown("""
         padding: 25px;
         border-radius: 15px;
         text-align: center;
-        animation: slideUp 0.6s ease-out;
-    }
-
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 """, unsafe_allow_html=True)
 
+@st.cache_resource
 def load_prediction_engine():
-    base_dir = os.path.dirname(__file__) if '__file__' in locals() else os.getcwd()
-    targets = ['model_v2 (2) (1).pkl', 'model_v2 (2).pkl']
-    for target in targets:
-        path = os.path.join(base_dir, target)
-        if os.path.exists(path):
-            with open(path, 'rb') as f:
-                return pickle.load(f)
-    return None
+
+    model_path = "model.pkl"
+
+    if not os.path.exists(model_path):
+        st.error("model.pkl file not found")
+        return None
+
+    try:
+        model = joblib.load(model_path)
+        return model
+
+    except Exception as e:
+        st.error(f"Model loading failed: {e}")
+        return None
 
 engine = load_prediction_engine()
 
 st.markdown("""
-    <div class="header-container">
-        <h1 class="main-title">Intelligence Hub</h1>
-        <p style="color: #94a3b8; font-size: 1.2rem; letter-spacing: 2px;">SECURE ANALYTICS TERMINAL</p>
-    </div>
+<div class="header-container">
+    <h1 class="main-title">Intelligence Hub</h1>
+    <p style="color: #94a3b8; font-size: 1.2rem; letter-spacing: 2px;">
+        SECURE ANALYTICS TERMINAL
+    </p>
+</div>
 """, unsafe_allow_html=True)
 
 if engine is None:
-    st.error("System Error: Predictive model not detected in the root directory.")
-else:
-    col1, col2, col3 = st.columns([1, 1.8, 1])
+    st.stop()
 
-    with col2:
-        st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
-        
-        selection_gender = st.selectbox("Gender Classification", options=["Male", "Female"])
-        input_age = st.slider("User Age", 18, 65, 30)
-        input_salary = st.number_input("Estimated Annual Salary", 10000, 250000, 50000)
-        
-        val_gender = 1 if selection_gender == "Male" else 0
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        if st.button("EXECUTE ANALYSIS"):
-            data_vector = np.array([[val_gender, input_age, input_salary]])
-            outcome = engine.predict(data_vector)
-            
-            st.markdown('<div class="result-display">', unsafe_allow_html=True)
-            if outcome[0] == 1:
-                st.markdown('<h2 style="color: #22c55e; margin:0;">POSITIVE PREDICTION</h2>', unsafe_allow_html=True)
-                st.markdown('<p style="color: #86efac;">High engagement probability identified.</p>', unsafe_allow_html=True)
+col1, col2, col3 = st.columns([1, 1.8, 1])
+
+with col2:
+
+    st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+
+    selection_gender = st.selectbox(
+        "Gender Classification",
+        options=["Male", "Female"]
+    )
+
+    input_age = st.slider(
+        "User Age",
+        18,
+        65,
+        30
+    )
+
+    input_salary = st.number_input(
+        "Estimated Annual Salary",
+        min_value=10000,
+        max_value=250000,
+        value=50000
+    )
+
+    val_gender = 1 if selection_gender == "Male" else 0
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if st.button("EXECUTE ANALYSIS"):
+
+        try:
+
+            data_vector = np.array([
+                [val_gender, input_age, input_salary]
+            ])
+
+            prediction = engine.predict(data_vector)
+
+            st.markdown(
+                '<div class="result-display">',
+                unsafe_allow_html=True
+            )
+
+            if prediction[0] == 1:
+
+                st.markdown("""
+                <h2 style="color: #22c55e;">
+                    POSITIVE PREDICTION
+                </h2>
+
+                <p style="color: #86efac;">
+                    High engagement probability identified.
+                </p>
+                """, unsafe_allow_html=True)
+
             else:
-                st.markdown('<h2 style="color: #ef4444; margin:0;">NEGATIVE PREDICTION</h2>', unsafe_allow_html=True)
-                st.markdown('<p style="color: #fca5a5;">Low engagement probability identified.</p>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+
+                st.markdown("""
+                <h2 style="color: #ef4444;">
+                    NEGATIVE PREDICTION
+                </h2>
+
+                <p style="color: #fca5a5;">
+                    Low engagement probability identified.
+                </p>
+                """, unsafe_allow_html=True)
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        except Exception as e:
+
+            st.error(f"Prediction Error: {e}")
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("""
-    <div style="text-align: center; margin-top: 6rem; color: #334155; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;">
-        V2.0 SYSTEM DEPLOYMENT | SCIKIT-LEARN 1.3.0 | ENCRYPTED
-    </div>
+<div style="
+    text-align:center;
+    margin-top:6rem;
+    color:#334155;
+    font-size:0.8rem;
+    font-weight:600;
+    letter-spacing:1px;
+">
+    V2.0 SYSTEM DEPLOYMENT | SCIKIT-LEARN 1.3.0
+</div>
 """, unsafe_allow_html=True)
