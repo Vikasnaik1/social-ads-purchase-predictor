@@ -1,5 +1,5 @@
 import streamlit as st
-import joblib
+import pickle
 import numpy as np
 import os
 
@@ -57,12 +57,6 @@ st.markdown("""
         font-size: 1.2rem;
     }
 
-    .stButton>button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 30px rgba(79, 172, 254, 0.4);
-        color: #000;
-    }
-
     .result-display {
         margin-top: 30px;
         padding: 25px;
@@ -82,7 +76,9 @@ def load_prediction_engine():
         return None
 
     try:
-        model = joblib.load(model_path)
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+
         return model
 
     except Exception as e:
@@ -178,16 +174,3 @@ with col2:
             st.error(f"Prediction Error: {e}")
 
     st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown("""
-<div style="
-    text-align:center;
-    margin-top:6rem;
-    color:#334155;
-    font-size:0.8rem;
-    font-weight:600;
-    letter-spacing:1px;
-">
-    V2.0 SYSTEM DEPLOYMENT | SCIKIT-LEARN 1.3.0
-</div>
-""", unsafe_allow_html=True)
