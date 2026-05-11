@@ -109,7 +109,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def load_model():
-    with open('model_v2 (2) (1).pkl', 'rb') as file:
+    with open('model_v2 (2) .pkl', 'rb') as file:
         return pickle.load(file)
 
 model = load_model()
