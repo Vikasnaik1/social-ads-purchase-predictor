@@ -1,1 +1,0 @@
-# social-ads-purchase-predictor
