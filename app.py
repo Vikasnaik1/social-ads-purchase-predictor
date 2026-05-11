@@ -1,173 +1,144 @@
 import streamlit as st
 import pickle
 import numpy as np
+import pandas as pd
 import os
 
 st.set_page_config(
-    page_title="Data Intelligence Terminal",
+    page_title="Analytics Intelligence",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+    
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-        background-color: #0f172a;
-        color: #f8fafc;
+        font-family: 'Outfit', sans-serif;
+        background-color: #050505;
+        color: #ffffff;
     }
 
-   .main {
-        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    .main {
+        background: radial-gradient(circle at 50% -20%, #1a1a2e, #050505);
     }
 
-   .header-section {
-        padding: 4rem 0 2rem 0;
+    .header-container {
+        padding: 4rem 0;
         text-align: center;
-        animation: fadeIn 1.2s ease-in-out;
+        animation: fadeIn 1.2s ease-in;
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
+        from { opacity: 0; transform: translateY(-20px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-   .title-text {
-        font-size: 3.5rem;
+    .main-title {
+        font-size: 4rem;
         font-weight: 700;
-        letter-spacing: -1px;
-        background: linear-gradient(90deg, #38bdf8, #818cf8);
+        background: linear-gradient(to right, #ffffff, #4facfe, #00f2fe);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0;
+        margin-bottom: 10px;
     }
 
-   .subtitle-text {
-        color: #94a3b8;
-        font-size: 1.1rem;
-        font-weight: 300;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-        margin-top: 10px;
-    }
-
-   .input-card {
-        background: rgba(30, 41, 59, 0.5);
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 3rem;
-        backdrop-filter: blur(12px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        border-radius: 24px;
+        padding: 50px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-   .stButton>button {
+    .stButton>button {
         width: 100%;
-        height: 3.5rem;
-        background: #38bdf8;
-        color: #0f172a;
+        height: 4rem;
+        background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+        color: #000;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 1.2rem;
+        letter-spacing: 1px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-   .stButton>button:hover {
-        background: #0ea5e9;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3);
+    .stButton>button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(79, 172, 254, 0.4);
+        color: #000;
     }
 
-   .prediction-output {
-        margin-top: 2.5rem;
-        padding: 1.5rem;
-        border-radius: 12px;
+    .result-display {
+        margin-top: 30px;
+        padding: 25px;
+        border-radius: 15px;
         text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# FIXED MODEL LOADER
-@st.cache_resource
-def load_model():
-    MODEL_PATH = "model.pkl" # Ithe tujhya.pkl file ch exact naav tak
+def load_prediction_engine():
+    base_dir = os.path.dirname(__file__) if '__file__' in locals() else os.getcwd()
+    targets = ['model_v2 (2) (1).pkl', 'model_v2 (2).pkl']
+    for target in targets:
+        path = os.path.join(base_dir, target)
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                return pickle.load(f)
+    return None
 
-    if not os.path.exists(MODEL_PATH):
-        return None, f"File '{MODEL_PATH}' sapadli nahi. Current folder: {os.getcwd()}"
-
-    try:
-        with open(MODEL_PATH, 'rb') as f:
-            model = pickle.load(f)
-        return model, "Success"
-    except Exception as e:
-        return None, f"Model load karayla error: {str(e)}"
-
-model_instance, msg = load_model()
+engine = load_prediction_engine()
 
 st.markdown("""
-    <div class="header-section">
-        <h1 class="title-text">Predictive Analysis System</h1>
-        <p class="subtitle-text">High Performance Vector Classification</p>
+    <div class="header-container">
+        <h1 class="main-title">Intelligence Hub</h1>
+        <p style="color: #94a3b8; font-size: 1.2rem; letter-spacing: 2px;">SECURE ANALYTICS TERMINAL</p>
     </div>
 """, unsafe_allow_html=True)
 
-# MODEL CHECK + UPLOADER BACKUP
-if model_instance is None:
-    st.error(f"Model Error: {msg}")
-    st.info("Tujhi.pkl file 'app.py' barobar same folder madhe thev. Naav 'model.pkl' asel tar uttam.")
-
-    st.markdown("### Kinva ithe upload kar:")
-    uploaded_file = st.file_uploader("Upload your.pkl model file", type=['pkl', 'pickle'])
-
-    if uploaded_file is not None:
-        try:
-            model_instance = pickle.load(uploaded_file)
-            st.success("Model uploaded ani load zala!")
-        except Exception as e:
-            st.error(f"Uploaded file load karayla error: {e}")
-            st.stop()
-    else:
-        st.stop()
+if engine is None:
+    st.error("System Error: Predictive model not detected in the root directory.")
 else:
-    st.toast("Model loaded successfully", icon="✅")
+    col1, col2, col3 = st.columns([1, 1.8, 1])
 
-# MAIN APP
-left, center, right = st.columns([1, 1.5, 1])
-
-with center:
-    st.markdown('<div class="input-card">', unsafe_allow_html=True)
-
-    user_gender = st.radio("Select Gender Profile", options=["Male", "Female"], horizontal=True)
-    user_age = st.slider("Subject Age", 18, 65, 30)
-    user_salary = st.number_input("Subject Annual Salary", 10000, 200000, 50000, step=500)
-
-    encoded_gender = 1 if user_gender == "Male" else 0
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if st.button("RUN DIAGNOSTIC"):
-        try:
-            input_features = np.array([[encoded_gender, user_age, user_salary]])
-            prediction_result = model_instance.predict(input_features)
-
-            st.markdown('<div class="prediction-output">', unsafe_allow_html=True)
-            if prediction_result[0] == 1:
-                st.markdown('<h2 style="color: #4ade80; margin:0;">CLASSIFICATION: POSITIVE</h2>', unsafe_allow_html=True)
-                st.markdown('<p style="color: #94a3b8;">High engagement probability detected.</p>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+        
+        selection_gender = st.selectbox("Gender Classification", options=["Male", "Female"])
+        input_age = st.slider("User Age", 18, 65, 30)
+        input_salary = st.number_input("Estimated Annual Salary", 10000, 250000, 50000)
+        
+        val_gender = 1 if selection_gender == "Male" else 0
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        if st.button("EXECUTE ANALYSIS"):
+            data_vector = np.array([[val_gender, input_age, input_salary]])
+            outcome = engine.predict(data_vector)
+            
+            st.markdown('<div class="result-display">', unsafe_allow_html=True)
+            if outcome[0] == 1:
+                st.markdown('<h2 style="color: #22c55e; margin:0;">POSITIVE PREDICTION</h2>', unsafe_allow_html=True)
+                st.markdown('<p style="color: #86efac;">High engagement probability identified.</p>', unsafe_allow_html=True)
             else:
-                st.markdown('<h2 style="color: #f87171; margin:0;">CLASSIFICATION: NEGATIVE</h2>', unsafe_allow_html=True)
-                st.markdown('<p style="color: #94a3b8;">Low engagement probability detected.</p>', unsafe_allow_html=True)
+                st.markdown('<h2 style="color: #ef4444; margin:0;">NEGATIVE PREDICTION</h2>', unsafe_allow_html=True)
+                st.markdown('<p style="color: #fca5a5;">Low engagement probability identified.</p>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"Prediction karayla error: {e}")
-
-    st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("""
-    <div style="text-align: center; margin-top: 6rem; color: #475569; font-size: 0.75rem; letter-spacing: 2px;">
-        ENCRYPTED DEPLOYMENT | SYSTEM READY | V2.0.1
+    <div style="text-align: center; margin-top: 6rem; color: #334155; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;">
+        V2.0 SYSTEM DEPLOYMENT | SCIKIT-LEARN 1.3.0 | ENCRYPTED
     </div>
 """, unsafe_allow_html=True)
