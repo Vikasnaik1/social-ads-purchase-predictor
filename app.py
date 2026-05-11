@@ -91,11 +91,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def load_model():
-    possible_names = ['model_v2 (2) (1).pkl', 'model_v2 (2) .pkl', 'model.pkl']
-    for name in possible_names:
-        if os.path.exists(name):
-            with open(name, 'rb') as file:
-                return pickle.load(file)
+    def load_model():
+    with open('model.pkl', 'rb') as file:
+        return pickle.load(file)
+    
     return None
 
 model = load_model()
